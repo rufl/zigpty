@@ -3,7 +3,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const posix = std.posix;
 const linux = std.os.linux;
-const lib = @import("lib.zig");
+const lib = @import("zigpty");
 
 extern fn execvpe(file: [*:0]const u8, argv: [*:null]const ?[*:0]const u8, envp: [*:null]const ?[*:0]const u8) c_int;
 extern fn ptsname_r(fd: c_int, buf: [*]u8, buflen: usize) c_int;
@@ -23,7 +23,7 @@ pub fn execChild(file: [*:0]const u8, argv: [*:null]const ?[*:0]const u8, envp: 
     // Only attempt the linker fallback on EACCES from noexec mounts (Android/Termux).
     // Distinguish noexec EACCES from permission EACCES: if the file has +x but
     // execve still returned EACCES, the mount must be noexec.
-    if (std.c._errno().* == @intFromEnum(std.c.E.ACCES)) {
+    if (std.c._errno().* == @backingInt(std.c.E.ACCES)) {
         const file_slice = std.mem.sliceTo(file, 0);
         const resolved = if (std.mem.indexOfScalar(u8, file_slice, '/') != null)
             file
@@ -495,7 +495,7 @@ pub fn resetSignalHandlers() void {
     sa.handler = .{ .handler = linux.SIG.DFL };
     var i: u8 = 1;
     while (i < linux.NSIG) : (i += 1) {
-        const sig: linux.SIG = @enumFromInt(i);
+        const sig: linux.SIG = @fromBackingInt(@intCast(i));
         if (sig == .KILL or sig == .STOP) continue;
         // Keep SIGSYS handler for Android seccomp softfail.
         // ensureTermuxExec() loads libtermux-exec.so before fork, which

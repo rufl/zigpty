@@ -1,7 +1,7 @@
 /// macOS-specific PTY helpers.
 const std = @import("std");
 const posix = std.posix;
-const lib = @import("lib.zig");
+const lib = @import("zigpty");
 
 extern fn execvp(file: [*:0]const u8, argv: [*:null]const ?[*:0]const u8) c_int;
 extern fn tcgetpgrp(fd: c_int) c_int;
@@ -354,7 +354,7 @@ pub fn resetSignalHandlers() void {
     sa.handler = .{ .handler = std.c.SIG.DFL };
     var i: u8 = 1;
     while (i < std.c.NSIG) : (i += 1) {
-        const sig: std.c.SIG = @enumFromInt(i);
+        const sig: std.c.SIG = @fromBackingInt(@intCast(i));
         if (sig == .KILL or sig == .STOP) continue;
         _ = std.c.sigaction(sig, &sa, null);
     }

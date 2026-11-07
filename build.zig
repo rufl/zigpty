@@ -16,12 +16,13 @@ pub fn build(b: *std.Build) void {
     const target_query = b.standardTargetOptionsQueryOnly(.{});
 
     // --- Zig package module (pure library, no NAPI) ---
-    _ = b.addModule("zigpty", .{
+    const zigpty = b.addModule("zigpty", .{
         .root_source_file = b.path("zig/lib.zig"),
         .target = b.resolveTargetQuery(target_query),
         .optimize = optimize,
         .link_libc = true,
     });
+    addSiblingImports(b, zigpty, b.resolveTargetQuery(target_query), optimize);
 
     // --- Zig tests ---
     const test_mod = b.createModule(.{
@@ -121,4 +122,39 @@ fn addTarget(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
         .dest_sub_path = dest_name,
     });
     b.getInstallStep().dependOn(&install.step);
+}
+
+fn addSiblingImports(
+    b: *std.Build,
+    root: *std.Build.Module,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) void {
+    const sources = [_][]const u8{
+        "lib.zig",
+        "napi.zig",
+        "pty.zig",
+        "pty_darwin.zig",
+        "pty_linux.zig",
+        "pty_unix.zig",
+        "pty_windows.zig",
+        "termios.zig",
+        "win/napi.zig",
+    };
+    var modules: [sources.len]*std.Build.Module = undefined;
+    modules[0] = root;
+    for (sources[1..], 1..) |source, index| {
+        modules[index] = b.createModule(.{
+            .root_source_file = b.path(b.fmt("zig/{s}", .{source})),
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        });
+    }
+    for (modules) |module| {
+        for (sources, 0..) |source, index| {
+            module.addImport(source, modules[index]);
+        }
+        if (module != root) module.addImport("zigpty", root);
+    }
 }

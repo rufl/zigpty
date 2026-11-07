@@ -18,7 +18,7 @@ pub const HRESULT = i32;
 pub const Fd = HANDLE;
 pub const Pid = DWORD;
 
-pub const ExitInfo = @import("lib.zig").ExitInfo;
+pub const ExitInfo = @import("zigpty").ExitInfo;
 
 pub const COORD = extern struct {
     x: i16,
@@ -282,7 +282,7 @@ fn filetimeToMicros(ft: FILETIME) u64 {
     return combined / 10;
 }
 
-const lib = @import("lib.zig");
+const lib = @import("zigpty");
 
 /// Per-process memory + CPU via an open process handle.
 fn processStats(process: HANDLE) ?struct { rss: u64, user_us: u64, sys_us: u64 } {
