@@ -22,7 +22,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .link_libc = true,
     });
-    addSiblingImports(b, zigpty, b.resolveTargetQuery(target_query), optimize);
+    addSiblingImports(b, zigpty, b.resolveTargetQuery(target_query), optimize, 0);
 
     // --- Zig tests ---
     const test_mod = b.createModule(.{
@@ -31,6 +31,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .link_libc = true,
     });
+    addSiblingImports(b, test_mod, b.resolveTargetQuery(target_query), optimize, 0);
     if (b.resolveTargetQuery(target_query).result.os.tag == .linux) {
         test_mod.linkSystemLibrary("util", .{});
     }
@@ -60,6 +61,7 @@ fn addTarget(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
         .optimize = optimize,
         .link_libc = !is_windows,
     });
+    addSiblingImports(b, mod, target, optimize, 9);
 
     // Musl builds: add errno shim for Android/Bionic compat
     // (weak symbols — overridden by musl's libc.so on real Linux, active on Android)
@@ -129,21 +131,25 @@ fn addSiblingImports(
     root: *std.Build.Module,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
+    root_index: usize,
 ) void {
     const sources = [_][]const u8{
         "lib.zig",
         "common.zig",
+        "napi.zig",
         "pty.zig",
         "pty_darwin.zig",
         "pty_linux.zig",
         "pty_unix.zig",
         "pty_windows.zig",
         "termios.zig",
+        "root.zig",
         "win/napi.zig",
     };
     var modules: [sources.len]*std.Build.Module = undefined;
-    modules[0] = root;
-    for (sources[1..], 1..) |source, index| {
+    modules[root_index] = root;
+    for (sources, 0..) |source, index| {
+        if (index == root_index) continue;
         modules[index] = b.createModule(.{
             .root_source_file = b.path(b.fmt("zig/{s}", .{source})),
             .target = target,
@@ -155,6 +161,6 @@ fn addSiblingImports(
         for (sources, 0..) |source, index| {
             if (module != modules[index]) module.addImport(source, modules[index]);
         }
-        if (module != root) module.addImport("zigpty", root);
+        if (module != root) module.addImport("zigpty", modules[0]);
     }
 }

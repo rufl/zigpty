@@ -1,9 +1,9 @@
 /// Windows NAPI exports for zigpty (ConPTY).
 /// Bridges Node-API ↔ pure Zig ConPTY library for spawn, write, resize, kill, close.
 const std = @import("std");
-const napi = @import("../napi.zig");
-const lib = @import("../lib.zig");
-const pty = @import("../pty.zig");
+const napi = @import("napi.zig");
+const lib = @import("lib.zig");
+const pty = @import("pty.zig");
 
 const alloc = pty.alloc;
 const win = lib.win;
