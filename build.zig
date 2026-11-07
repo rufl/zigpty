@@ -17,7 +17,7 @@ pub fn build(b: *std.Build) void {
 
     // --- Zig package module (pure library, no NAPI) ---
     const zigpty = b.addModule("zigpty", .{
-        .root_source_file = b.path("zig/lib.zig"),
+        .root_source_file = b.path("zig/root.zig"),
         .target = b.resolveTargetQuery(target_query),
         .optimize = optimize,
         .link_libc = true,
@@ -26,7 +26,7 @@ pub fn build(b: *std.Build) void {
 
     // --- Zig tests ---
     const test_mod = b.createModule(.{
-        .root_source_file = b.path("zig/lib.zig"),
+        .root_source_file = b.path("zig/root.zig"),
         .target = b.resolveTargetQuery(target_query),
         .optimize = optimize,
         .link_libc = true,
@@ -56,7 +56,7 @@ fn addTarget(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
     const is_musl = target.result.abi == .musl or target.result.abi == .musleabi;
 
     const mod = b.createModule(.{
-        .root_source_file = b.path("zig/root.zig"),
+        .root_source_file = b.path("zig/napi_root.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = !is_windows,
@@ -134,7 +134,7 @@ fn addSiblingImports(
     root_index: usize,
 ) void {
     const sources = [_][]const u8{
-        "lib.zig",
+        "root.zig",
         "common.zig",
         "napi.zig",
         "pty.zig",
@@ -143,7 +143,7 @@ fn addSiblingImports(
         "pty_unix.zig",
         "pty_windows.zig",
         "termios.zig",
-        "root.zig",
+        "napi_root.zig",
         "win/napi.zig",
     };
     var modules: [sources.len]*std.Build.Module = undefined;

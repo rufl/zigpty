@@ -3,7 +3,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const napi = @import("napi.zig");
-const lib = @import("lib.zig");
+const lib = @import("zigpty");
 
 pub const is_windows = builtin.os.tag == .windows;
 pub const alloc = if (is_windows) std.heap.page_allocator else std.heap.c_allocator;

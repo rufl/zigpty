@@ -2,7 +2,7 @@
 /// Bridges Node-API ↔ pure Zig ConPTY library for spawn, write, resize, kill, close.
 const std = @import("std");
 const napi = @import("napi.zig");
-const lib = @import("lib.zig");
+const lib = @import("zigpty");
 const pty = @import("pty.zig");
 
 const alloc = pty.alloc;

@@ -47,20 +47,20 @@ fn configureLinux(term: *std.os.linux.termios, use_utf8: bool) void {
     term.ospeed = .B38400;
 
     // Special characters
-    term.cc[@intFromEnum(V.INTR)] = 0x03; // Ctrl-C
-    term.cc[@intFromEnum(V.QUIT)] = 0x1c; // Ctrl-backslash
-    term.cc[@intFromEnum(V.ERASE)] = 0x7f; // DEL
-    term.cc[@intFromEnum(V.KILL)] = 0x15; // Ctrl-U
-    term.cc[@intFromEnum(V.EOF)] = 0x04; // Ctrl-D
-    term.cc[@intFromEnum(V.START)] = 0x11; // Ctrl-Q (XON)
-    term.cc[@intFromEnum(V.STOP)] = 0x13; // Ctrl-S (XOFF)
-    term.cc[@intFromEnum(V.SUSP)] = 0x1a; // Ctrl-Z
-    term.cc[@intFromEnum(V.REPRINT)] = 0x12; // Ctrl-R
-    term.cc[@intFromEnum(V.WERASE)] = 0x17; // Ctrl-W
-    term.cc[@intFromEnum(V.LNEXT)] = 0x16; // Ctrl-V
-    term.cc[@intFromEnum(V.DISCARD)] = 0x0f; // Ctrl-O
-    term.cc[@intFromEnum(V.MIN)] = 1;
-    term.cc[@intFromEnum(V.TIME)] = 0;
+    term.cc[@backingInt(V.INTR)] = 0x03; // Ctrl-C
+    term.cc[@backingInt(V.QUIT)] = 0x1c; // Ctrl-backslash
+    term.cc[@backingInt(V.ERASE)] = 0x7f; // DEL
+    term.cc[@backingInt(V.KILL)] = 0x15; // Ctrl-U
+    term.cc[@backingInt(V.EOF)] = 0x04; // Ctrl-D
+    term.cc[@backingInt(V.START)] = 0x11; // Ctrl-Q (XON)
+    term.cc[@backingInt(V.STOP)] = 0x13; // Ctrl-S (XOFF)
+    term.cc[@backingInt(V.SUSP)] = 0x1a; // Ctrl-Z
+    term.cc[@backingInt(V.REPRINT)] = 0x12; // Ctrl-R
+    term.cc[@backingInt(V.WERASE)] = 0x17; // Ctrl-W
+    term.cc[@backingInt(V.LNEXT)] = 0x16; // Ctrl-V
+    term.cc[@backingInt(V.DISCARD)] = 0x0f; // Ctrl-O
+    term.cc[@backingInt(V.MIN)] = 1;
+    term.cc[@backingInt(V.TIME)] = 0;
 }
 
 fn configureDarwin(term: *std.c.termios) void {
@@ -98,21 +98,21 @@ fn configureDarwin(term: *std.c.termios) void {
     term.ospeed = .B38400;
 
     // Special characters
-    term.cc[@intFromEnum(V.INTR)] = 0x03; // Ctrl-C
-    term.cc[@intFromEnum(V.QUIT)] = 0x1c; // Ctrl-backslash
-    term.cc[@intFromEnum(V.ERASE)] = 0x7f; // DEL
-    term.cc[@intFromEnum(V.KILL)] = 0x15; // Ctrl-U
-    term.cc[@intFromEnum(V.EOF)] = 0x04; // Ctrl-D
-    term.cc[@intFromEnum(V.START)] = 0x11; // Ctrl-Q (XON)
-    term.cc[@intFromEnum(V.STOP)] = 0x13; // Ctrl-S (XOFF)
-    term.cc[@intFromEnum(V.SUSP)] = 0x1a; // Ctrl-Z
-    term.cc[@intFromEnum(V.REPRINT)] = 0x12; // Ctrl-R
-    term.cc[@intFromEnum(V.WERASE)] = 0x17; // Ctrl-W
-    term.cc[@intFromEnum(V.LNEXT)] = 0x16; // Ctrl-V
-    term.cc[@intFromEnum(V.DISCARD)] = 0x0f; // Ctrl-O
-    term.cc[@intFromEnum(V.MIN)] = 1;
-    term.cc[@intFromEnum(V.TIME)] = 0;
+    term.cc[@backingInt(V.INTR)] = 0x03; // Ctrl-C
+    term.cc[@backingInt(V.QUIT)] = 0x1c; // Ctrl-backslash
+    term.cc[@backingInt(V.ERASE)] = 0x7f; // DEL
+    term.cc[@backingInt(V.KILL)] = 0x15; // Ctrl-U
+    term.cc[@backingInt(V.EOF)] = 0x04; // Ctrl-D
+    term.cc[@backingInt(V.START)] = 0x11; // Ctrl-Q (XON)
+    term.cc[@backingInt(V.STOP)] = 0x13; // Ctrl-S (XOFF)
+    term.cc[@backingInt(V.SUSP)] = 0x1a; // Ctrl-Z
+    term.cc[@backingInt(V.REPRINT)] = 0x12; // Ctrl-R
+    term.cc[@backingInt(V.WERASE)] = 0x17; // Ctrl-W
+    term.cc[@backingInt(V.LNEXT)] = 0x16; // Ctrl-V
+    term.cc[@backingInt(V.DISCARD)] = 0x0f; // Ctrl-O
+    term.cc[@backingInt(V.MIN)] = 1;
+    term.cc[@backingInt(V.TIME)] = 0;
     // macOS-only special characters
-    term.cc[@intFromEnum(V.DSUSP)] = 0x19; // Ctrl-Y (delayed suspend)
-    term.cc[@intFromEnum(V.STATUS)] = 0x14; // Ctrl-T (status)
+    term.cc[@backingInt(V.DSUSP)] = 0x19; // Ctrl-Y (delayed suspend)
+    term.cc[@backingInt(V.STATUS)] = 0x14; // Ctrl-T (status)
 }

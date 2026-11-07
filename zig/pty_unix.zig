@@ -2,7 +2,7 @@
 /// Bridges Node-API ↔ pure Zig PTY library for fork, open, resize, process.
 const std = @import("std");
 const napi = @import("napi.zig");
-const lib = @import("lib.zig");
+const lib = @import("zigpty");
 const pty = @import("pty.zig");
 
 const alloc = pty.alloc;
