@@ -159,7 +159,7 @@ fn addSiblingImports(
     }
     for (modules) |module| {
         for (sources, 0..) |source, index| {
-            if (module != modules[index]) module.addImport(source, modules[index]);
+            if (index != root_index and module != modules[index]) module.addImport(source, modules[index]);
         }
         if (module != root) module.addImport("zigpty", modules[0]);
     }
