@@ -1,6 +1,7 @@
 /// Windows ConPTY implementation.
 /// Uses CreatePseudoConsole + CreateProcessW for pseudo-terminal support on Windows.
 const std = @import("std");
+const common = @import("common.zig");
 const windows = std.os.windows;
 
 pub const HANDLE = windows.HANDLE;
@@ -18,7 +19,7 @@ pub const HRESULT = i32;
 pub const Fd = HANDLE;
 pub const Pid = DWORD;
 
-pub const ExitInfo = @import("zigpty").ExitInfo;
+pub const ExitInfo = @import("common.zig").ExitInfo;
 
 pub const COORD = extern struct {
     x: i16,
@@ -282,7 +283,7 @@ fn filetimeToMicros(ft: FILETIME) u64 {
     return combined / 10;
 }
 
-const lib = @import("zigpty");
+const lib = @import("common.zig");
 
 /// Per-process memory + CPU via an open process handle.
 fn processStats(process: HANDLE) ?struct { rss: u64, user_us: u64, sys_us: u64 } {
@@ -372,7 +373,7 @@ fn snapshotProcesses(allocator: std.mem.Allocator) ![]ProcEntry {
 /// them. `cwd` stays null — reading another process's cwd requires
 /// NtQueryInformationProcess + remote PEB read, which is fragile across
 /// elevation boundaries.
-pub fn getStats(process: HANDLE, pid: u32, allocator: std.mem.Allocator) ?lib.Stats {
+pub fn getStats(process: HANDLE, pid: u32, allocator: std.mem.Allocator) ?common.Stats {
     // Gate on liveness.
     const STILL_ACTIVE: DWORD = 259;
     var exit_code: DWORD = 0;
@@ -382,7 +383,7 @@ pub fn getStats(process: HANDLE, pid: u32, allocator: std.mem.Allocator) ?lib.St
     // Start with leader stats from the already-open process handle.
     const leader_stats = processStats(process) orelse return null;
 
-    var children: std.ArrayListUnmanaged(lib.ChildStats) = .empty;
+    var children: std.ArrayListUnmanaged(common.ChildStats) = .empty;
     errdefer children.deinit(allocator);
 
     var total_rss: u64 = leader_stats.rss;
@@ -440,7 +441,7 @@ pub fn getStats(process: HANDLE, pid: u32, allocator: std.mem.Allocator) ?lib.St
 
             const ps = processStats(h) orelse continue;
 
-            var child = lib.ChildStats{
+            var child = common.ChildStats{
                 .pid = e.pid,
                 .name = undefined,
                 .name_len = 0,
@@ -462,9 +463,9 @@ pub fn getStats(process: HANDLE, pid: u32, allocator: std.mem.Allocator) ?lib.St
 
     const owned = children.toOwnedSlice(allocator) catch blk: {
         children.deinit(allocator);
-        break :blk &[_]lib.ChildStats{};
+        break :blk &[_]common.ChildStats{};
     };
-    return lib.Stats{
+    return common.Stats{
         .pid = pid,
         .cwd = null,
         .rss_bytes = total_rss,

@@ -3,7 +3,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const posix = std.posix;
 const linux = std.os.linux;
-const lib = @import("zigpty");
+const common = @import("common.zig");
 
 extern fn execvpe(file: [*:0]const u8, argv: [*:null]const ?[*:0]const u8, envp: [*:null]const ?[*:0]const u8) c_int;
 extern fn ptsname_r(fd: c_int, buf: [*]u8, buflen: usize) c_int;
@@ -234,7 +234,7 @@ const ProcEntry = struct {
 /// Catches background jobs, subshells, and anything else the leader spawned,
 /// regardless of pgrp/session/job-control juggling. Double-fork daemons that
 /// reparent to init fall out of the tree (expected — they detached).
-pub fn getStats(leader_pid: posix.pid_t, allocator: std.mem.Allocator, cwd_buf: []u8) ?lib.Stats {
+pub fn getStats(leader_pid: posix.pid_t, allocator: std.mem.Allocator, cwd_buf: []u8) ?common.Stats {
     if (leader_pid <= 0) return null;
 
     const clk_tck: u64 = 100;
@@ -331,7 +331,7 @@ pub fn getStats(leader_pid: posix.pid_t, allocator: std.mem.Allocator, cwd_buf: 
         }
     }
 
-    var children: std.ArrayListUnmanaged(lib.ChildStats) = .empty;
+    var children: std.ArrayListUnmanaged(common.ChildStats) = .empty;
     errdefer children.deinit(allocator);
 
     var total_rss: u64 = 0;
@@ -354,7 +354,7 @@ pub fn getStats(leader_pid: posix.pid_t, allocator: std.mem.Allocator, cwd_buf: 
 
         if (e.pid == leader_pid) continue;
 
-        var child = lib.ChildStats{
+        var child = common.ChildStats{
             .pid = e.pid,
             .name = undefined,
             .name_len = 0,
@@ -375,9 +375,9 @@ pub fn getStats(leader_pid: posix.pid_t, allocator: std.mem.Allocator, cwd_buf: 
 
     const owned = children.toOwnedSlice(allocator) catch blk: {
         children.deinit(allocator);
-        break :blk &[_]lib.ChildStats{};
+        break :blk &[_]common.ChildStats{};
     };
-    return lib.Stats{
+    return common.Stats{
         .pid = leader_pid,
         .cwd = leader_cwd,
         .rss_bytes = total_rss,

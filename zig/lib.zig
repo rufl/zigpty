@@ -18,14 +18,11 @@ pub const win = platform;
 /// Re-export termios config (Unix only).
 pub const termconfig = if (!is_windows) @import("termios.zig") else struct {};
 
-// --- Shared types ---
-
-/// Exit information from a child process.
-pub const ExitInfo = struct {
-    exit_code: i32,
-    signal_code: i32,
-};
-
+// Shared API types are defined in a cycle-free module used by platform backends.
+const common = @import("common.zig");
+pub const ExitInfo = common.ExitInfo;
+pub const ChildStats = common.ChildStats;
+pub const Stats = common.Stats;
 pub const Fd = if (is_windows) platform.Fd else std.posix.fd_t;
 pub const Pid = if (is_windows) platform.Pid else std.posix.pid_t;
 
@@ -77,51 +74,6 @@ pub const PtyError = error{
     ChdirFailed,
     PtsnameFailed,
     TtynameFailed,
-};
-
-/// Info for a single non-leader process aggregated into Stats.
-/// `name` is a short executable/command name (truncated to 32 bytes).
-pub const ChildStats = struct {
-    pid: Pid,
-    name: [32]u8,
-    name_len: u8,
-    rss_bytes: u64,
-    cpu_user_us: u64,
-    cpu_sys_us: u64,
-
-    pub fn nameSlice(self: *const ChildStats) []const u8 {
-        return self.name[0..self.name_len];
-    }
-};
-
-/// Aggregated process stats for a PTY.
-/// Aggregates the leader process and every transitive descendant (by ppid)
-/// on all platforms. Catches background jobs, subshells, and anything else
-/// the leader spawned, regardless of pgrp/session/job-control juggling.
-/// Double-fork daemons that reparent away from the leader fall out of the
-/// tree (expected — they detached on purpose).
-///
-/// Top-level `rss_bytes`/`cpu_user_us`/`cpu_sys_us` are totals across all
-/// aggregated processes (leader + children). `pid`/`cwd` refer to the leader
-/// process (the spawned shell). `children` lists all non-leader descendants
-/// aggregated; `count` is the total number of processes (children.len + 1).
-///
-/// `cwd` is a slice into the caller-provided buffer — null on Windows.
-/// `children` is owned by the caller's allocator — call `deinit` to free.
-/// CPU times are in microseconds. `rss_bytes` is resident set size.
-pub const Stats = struct {
-    pid: Pid,
-    cwd: ?[]const u8,
-    rss_bytes: u64,
-    cpu_user_us: u64,
-    cpu_sys_us: u64,
-    count: u32,
-    children: []const ChildStats,
-
-    pub fn deinit(self: *Stats, allocator: std.mem.Allocator) void {
-        if (self.children.len > 0) allocator.free(self.children);
-        self.children = &[_]ChildStats{};
-    }
 };
 
 // Unix extern declarations and functions — only compiled on non-Windows
@@ -257,7 +209,7 @@ fn waitForExitUnix(pid: std.posix.pid_t) ExitInfo {
         const ret = unix.waitpid(pid, &status, 0);
         if (ret == pid) break;
         if (ret == -1) {
-            if (@as(std.posix.E, @enumFromInt(std.c._errno().*)) == .INTR) continue;
+            if (@as(std.posix.E, @fromBackingInt(@intCast(std.c._errno().*))) == .INTR) continue;
             return .{ .exit_code = -1, .signal_code = 0 };
         }
     }

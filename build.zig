@@ -132,7 +132,7 @@ fn addSiblingImports(
 ) void {
     const sources = [_][]const u8{
         "lib.zig",
-        "napi.zig",
+        "common.zig",
         "pty.zig",
         "pty_darwin.zig",
         "pty_linux.zig",

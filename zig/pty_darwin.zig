@@ -1,7 +1,7 @@
 /// macOS-specific PTY helpers.
 const std = @import("std");
 const posix = std.posix;
-const lib = @import("zigpty");
+const common = @import("common.zig");
 
 extern fn execvp(file: [*:0]const u8, argv: [*:null]const ?[*:0]const u8) c_int;
 extern fn tcgetpgrp(fd: c_int) c_int;
@@ -234,14 +234,14 @@ fn snapshotProcesses(allocator: std.mem.Allocator) ?[]ProcEntry {
 /// leader). Catches background jobs, subshells, and anything else the leader
 /// spawned, regardless of pgrp or session juggling. Double-fork daemons that
 /// reparent to launchd fall out of the tree (expected — they detached).
-pub fn getStats(leader_pid: posix.pid_t, allocator: std.mem.Allocator, cwd_buf: []u8) ?lib.Stats {
+pub fn getStats(leader_pid: posix.pid_t, allocator: std.mem.Allocator, cwd_buf: []u8) ?common.Stats {
     if (leader_pid <= 0) return null;
 
     // Leader rss + cpu first — gates liveness and keeps the common case (no
     // descendants) cheap (just two proc_pidinfo calls).
     const leader_ti = taskInfo(@intCast(leader_pid)) orelse return null;
 
-    var children: std.ArrayListUnmanaged(lib.ChildStats) = .empty;
+    var children: std.ArrayListUnmanaged(common.ChildStats) = .empty;
     errdefer children.deinit(allocator);
 
     var total_rss: u64 = leader_ti.rss;
@@ -294,7 +294,7 @@ pub fn getStats(leader_pid: posix.pid_t, allocator: std.mem.Allocator, cwd_buf: 
 
             const ti = taskInfo(e.pid) orelse continue;
 
-            var child = lib.ChildStats{
+            var child = common.ChildStats{
                 .pid = e.pid,
                 .name = undefined,
                 .name_len = 0,
@@ -329,9 +329,9 @@ pub fn getStats(leader_pid: posix.pid_t, allocator: std.mem.Allocator, cwd_buf: 
 
     const owned = children.toOwnedSlice(allocator) catch blk: {
         children.deinit(allocator);
-        break :blk &[_]lib.ChildStats{};
+        break :blk &[_]common.ChildStats{};
     };
-    return lib.Stats{
+    return common.Stats{
         .pid = leader_pid,
         .cwd = leader_cwd,
         .rss_bytes = total_rss,
